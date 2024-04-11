@@ -35,13 +35,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.eventapp.ui.theme.EventAppTheme
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.eventapp.ui.theme.EventAppTheme
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,17 +63,11 @@ class MainActivity : ComponentActivity() {
 }
 
 
-
-
-
-
 @Composable
 fun MainScreen() {
 
     var route by remember { mutableStateOf("Home") }
     var navController = rememberNavController()
-
-
 
     Scaffold(
         topBar = {
@@ -84,21 +78,20 @@ fun MainScreen() {
         }
     ) { innerPadding ->
 
-        NavHost(navController = navController , startDestination = "Home" ){
+        NavHost(navController = navController, startDestination = "Home") {
 
-            composable("Home"){
+            composable("Home") {
                 HomeScreen(innerPadding = innerPadding, navController = navController)
             }
 
-            composable("Profile"){
+            composable("Profile") {
                 ProfileScreen(innerPadding = innerPadding, navController = navController)
             }
 
-            composable("Creator"){
+            composable("Creator") {
                 CreatorScreen(innerPadding = innerPadding, navController = navController)
             }
         }
-
 
 
     }
@@ -107,12 +100,11 @@ fun MainScreen() {
 }
 
 
-
 @Composable
 fun HomeScreen(
     innerPadding: PaddingValues,
     navController: NavController
-){
+) {
 
 
     Column(
@@ -191,7 +183,6 @@ fun HomeScreen(
         ) {}
 
         Column(Modifier.verticalScroll(rememberScrollState())) {
-
 
 
             repeat(5) {

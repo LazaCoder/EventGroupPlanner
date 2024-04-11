@@ -19,9 +19,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -101,7 +99,7 @@ fun TopBar() {
 @Composable
 fun BottomBar(navController: NavController) {
 
-    var current = rememberSaveable{ mutableStateOf("Home") }
+    var current = rememberSaveable { mutableStateOf("Home") }
 
     Surface(
         modifier = Modifier
@@ -143,8 +141,8 @@ fun BottomBar(navController: NavController) {
                 NavigationBarItem(
                     selected = current.value == "Creator",
                     onClick = {
-                              current.value = "Creator"
-                                navController.navigate("Creator")
+                        current.value = "Creator"
+                        navController.navigate("Creator")
 
                     },
                     icon = {
@@ -160,8 +158,8 @@ fun BottomBar(navController: NavController) {
                 NavigationBarItem(
                     selected = current.value == "Profile",
                     onClick = {
-                              current.value = "Profile"
-                              navController.navigate("Profile")
+                        current.value = "Profile"
+                        navController.navigate("Profile")
 
 
                     },

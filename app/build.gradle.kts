@@ -50,7 +50,8 @@ android {
 }
 
 dependencies {
-    implementation ("androidx.navigation:navigation-compose:2.4.0-alpha10")
+    implementation("com.marosseleng.android:compose-material3-datetime-pickers:0.7.2")
+    implementation ("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.compose.material3:material3:1.2.1")
     implementation("androidx.compose.material3:material3-window-size-class:1.2.1")
     implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.0.0-alpha05")

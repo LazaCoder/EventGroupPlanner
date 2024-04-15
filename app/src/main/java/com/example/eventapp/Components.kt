@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -173,6 +175,30 @@ fun BottomBar(navController: NavController) {
                     label = {
                         Text("Profile", color = Color.White)
                     })
+
+
+                NavigationBarItem(
+
+                    selected = current.value == "Login",
+                    onClick = {
+                        current.value = "Login"
+                        navController.navigate("Login")
+
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                            contentDescription = " ",
+                            tint = if (current.value == "Login") Color.Black else Color.White
+                        )
+                    },
+                    label = {
+                        Text("Home", color = Color.White)
+
+                    })
+
+
+
 
             }
 

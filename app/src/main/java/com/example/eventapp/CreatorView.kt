@@ -7,20 +7,28 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,7 +44,10 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.marosseleng.compose.material3.datetimepickers.date.ui.dialog.DatePickerDialog
+import com.marosseleng.compose.material3.datetimepickers.time.ui.TimePicker
+import com.marosseleng.compose.material3.datetimepickers.time.ui.dialog.TimePickerDialog
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 
@@ -46,14 +57,19 @@ import java.util.Calendar
 fun CreatorScreen(innerPadding: PaddingValues, navController: NavHostController) {
 
     var date by remember { mutableStateOf(LocalDate.now()) }
+    var time by remember {
+        mutableStateOf(LocalTime.now())
+    }
+
     val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
-
-    // Remembering the selected date to persist over recompositions
+    var showTimePicker by remember { mutableStateOf(false) }
     val calendar = remember { Calendar.getInstance() }
-    val year = remember { calendar.get(Calendar.YEAR) }
-    val month = remember { calendar.get(Calendar.MONTH) }
-    val day = remember { calendar.get(Calendar.DAY_OF_MONTH) }
+    var expanded by remember { mutableStateOf(false) }
+    var selectedIndex by remember { mutableIntStateOf(0) }
+    val items = listOf("Biljar", "Kof", "Mesina", "Ostalo")
+
+
 
 
     Column(
@@ -64,26 +80,64 @@ fun CreatorScreen(innerPadding: PaddingValues, navController: NavHostController)
             .fillMaxSize()
 
     ) {
-        Box(
-            modifier = Modifier
-                .border(1.dp, MaterialTheme.colorScheme.secondary, MaterialTheme.shapes.medium)
-                .background(MaterialTheme.colorScheme.secondary, MaterialTheme.shapes.medium)
-                .padding(16.dp)
-                .fillMaxWidth(.75f),
-            contentAlignment = Alignment.Center,
+
+        Spacer(modifier = Modifier.height(50.dp))
 
 
-            ) {
+            Row(horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth(0.75f)
+                ) {
 
-            Text(
-                text = "Create Your Event",
-                style = MaterialTheme.typography.headlineSmall,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
+
+
+            TextField(value = items[selectedIndex], onValueChange = {}, label = {
+
+                Text(text = "Event Type", style = MaterialTheme.typography.bodyMedium)
+
+            }, readOnly = true,
+             modifier = Modifier.fillMaxWidth(0.6f)
+
             )
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = {  expanded = true},
+                modifier = Modifier.fillMaxWidth(0.8f),
+                shape = MaterialTheme.shapes.medium,
+
+
+                ) {
+                Text(
+                    text = "Select Type",
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White
+                )
+
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                ) {
+                    items.forEachIndexed { index, s ->
+
+                        DropdownMenuItem(text = { Text(s) },
+                            onClick = {
+                                selectedIndex = index
+                                expanded = false})
+
+                    }
+
+
+
+                }
+
+            }
+
+            }
+
+
+
+
+
 
         TextField(value = "", onValueChange = { /*TODO*/ }, label = {
 
@@ -141,19 +195,55 @@ fun CreatorScreen(innerPadding: PaddingValues, navController: NavHostController)
 
         }
 
-        if (showDialog) {
 
-            DatePickerDialog(onDismissRequest = { showDialog = false },
-                onDateChange = {
-                    date = it
-                    showDialog = false
-                },
-                today = LocalDate.now(),
-                title = {
-                    Text("Select Date")
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth(0.75f),
+            verticalAlignment = Alignment.CenterVertically
 
-                }
-            )
+        ) {
+
+
+            TextField(
+                modifier = Modifier
+                    .fillMaxWidth(0.6f),
+                value = time.format(DateTimeFormatter.ofPattern("HH:mm")),
+                onValueChange = { },
+                readOnly = true,
+                label = { Text("Hour") },
+
+                )
+
+            Button(
+                onClick = { showTimePicker = true},
+                modifier = Modifier.fillMaxWidth(0.8f),
+                shape = MaterialTheme.shapes.medium,
+
+
+                ) {
+                Text(
+                    text = "Select Hour",
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White
+                )
+
+            }
+
+
+        }
+
+
+
+        if (showTimePicker) {
+            TimePickerDialog(onDismissRequest = { showTimePicker = false },
+                onTimeChange ={time = it},
+                is24HourFormat = false,
+                initialTime = LocalTime.now(),
+                title = {Text("Select Time")},
+
+                )
+
 
 
         }
@@ -166,10 +256,33 @@ fun CreatorScreen(innerPadding: PaddingValues, navController: NavHostController)
             label = { Text("Description") },
             modifier = Modifier
                 .fillMaxWidth(.75f)
-                .height(200.dp), // Adjust the height as needed
-            maxLines = Int.MAX_VALUE // Allow as many lines as needed
+                .height(150.dp), // Adjust the height as needed
+            maxLines = 5// Allow as many lines as needed
         )
+        Row(
+            horizontalArrangement = Arrangement.Start
+            , modifier = Modifier.fillMaxWidth(0.75f)
 
+        ) {
+
+
+            Button(
+                onClick = { },
+                modifier = Modifier.fillMaxWidth(0.5f),
+                shape = MaterialTheme.shapes.medium,
+
+
+                ) {
+                Text(
+                    text = "Submit",
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = Color.White
+                )
+
+            }
+
+        }
 
     }
 

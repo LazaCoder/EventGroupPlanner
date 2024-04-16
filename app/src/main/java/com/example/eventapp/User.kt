@@ -11,7 +11,7 @@ data class User(
     val surname: String,
     val password: String,
     val age: Int,
-    val image_id: Int,
+    val image_id: String,
     val description: String,
     val nickname: String?
 )

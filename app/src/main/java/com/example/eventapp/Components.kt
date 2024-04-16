@@ -21,8 +21,11 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 
 
@@ -101,7 +105,16 @@ fun TopBar() {
 @Composable
 fun BottomBar(navController: NavController) {
 
-    var current = rememberSaveable { mutableStateOf("Home") }
+    // This function observes the current back stack entry and returns the current route
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+
+    // Remember and derive the selected tab from the current route
+    var current by rememberSaveable { mutableStateOf(currentRoute ?: "Home") }
+
+
+    LaunchedEffect(currentRoute) {
+        current = currentRoute ?: "Home"
+    }
 
     Surface(
         modifier = Modifier
@@ -123,17 +136,23 @@ fun BottomBar(navController: NavController) {
 
                 NavigationBarItem(
 
-                    selected = current.value == "Home",
+                    selected = current== "Home",
                     onClick = {
-                        current.value = "Home"
-                        navController.navigate("Home")
+                        current= "Home"
+                        navController.navigate("Home"){
+
+                            popUpTo(navController.graph.startDestinationId)
+                            launchSingleTop = true
+
+
+                        }
 
                     },
                     icon = {
                         Icon(
                             imageVector = Icons.Default.Home,
                             contentDescription = " ",
-                            tint = if (current.value == "Home") Color.Black else Color.White
+                            tint = if (current == "Home") Color.Black else Color.White
                         )
                     },
                     label = {
@@ -141,27 +160,41 @@ fun BottomBar(navController: NavController) {
 
                     })
                 NavigationBarItem(
-                    selected = current.value == "Creator",
+                    selected = current == "Creator",
                     onClick = {
-                        current.value = "Creator"
-                        navController.navigate("Creator")
+                        current = "Creator"
+                        navController.navigate("Creator"){
+
+
+                            popUpTo(navController.graph.startDestinationId)
+                            launchSingleTop = true
+
+
+                        }
 
                     },
                     icon = {
                         Icon(
                             imageVector = Icons.Default.Create,
                             contentDescription = " ",
-                            tint = if (current.value == "Creator") Color.Black else Color.White
+                            tint = if (current == "Creator") Color.Black else Color.White
                         )
                     },
                     label = {
                         Text("Event Creator", color = Color.White)
                     })
                 NavigationBarItem(
-                    selected = current.value == "Profile",
+                    selected = current == "Profile",
                     onClick = {
-                        current.value = "Profile"
-                        navController.navigate("Profile")
+                        current = "Profile"
+                        navController.navigate("Profile"){
+
+
+                            popUpTo(navController.graph.startDestinationId)
+                            launchSingleTop = true
+
+
+                        }
 
 
                     },
@@ -169,7 +202,7 @@ fun BottomBar(navController: NavController) {
                         Icon(
                             imageVector = Icons.Default.AccountCircle,
                             contentDescription = " ",
-                            tint = if (current.value == "Profile") Color.Black else Color.White
+                            tint = if (current == "Profile") Color.Black else Color.White
                         )
                     },
                     label = {
@@ -179,21 +212,28 @@ fun BottomBar(navController: NavController) {
 
                 NavigationBarItem(
 
-                    selected = current.value == "Login",
+                    selected = current == "Login",
                     onClick = {
-                        current.value = "Login"
-                        navController.navigate("Login")
+                        current = "Login"
+                        navController.navigate("Login"){
+
+
+                            popUpTo(navController.graph.startDestinationId)
+                            launchSingleTop = true
+
+
+                        }
 
                     },
                     icon = {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                             contentDescription = " ",
-                            tint = if (current.value == "Login") Color.Black else Color.White
+                            tint = if (current == "Logout") Color.Black else Color.White
                         )
                     },
                     label = {
-                        Text("Home", color = Color.White)
+                        Text("Logout", color = Color.White)
 
                     })
 

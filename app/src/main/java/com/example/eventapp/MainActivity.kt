@@ -7,26 +7,20 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,9 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -49,25 +41,28 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 class MainActivity : ComponentActivity() {
+
+
+    var dummyUser = User(
+        id = 1L,
+        name = "John",
+        surname = "Doe",
+        password = "password123",
+        age = 30,
+        image_id = "laza_img", // Replace with your actual default image resource ID
+        description = "This is a dummy user",
+        nickname = "johndoe"
+    )
+
     override fun onCreate(savedInstanceState: Bundle?) {
 
-        var dummyUser = User(
-            id = 1L,
-            name = "John",
-            surname = "Doe",
-            password = "password123",
-            age = 30,
-            image_id = 1, // Replace with your actual default image resource ID
-            description = "This is a dummy user",
-            nickname = "johndoe"
-        )
+
 
 
 
         super.onCreate(savedInstanceState)
         setContent {
             EventAppTheme {
-
 
 
                 // A surface container using the 'background' color from the theme
@@ -79,11 +74,14 @@ class MainActivity : ComponentActivity() {
 
                     var isLoggedIn by rememberSaveable { mutableStateOf(false) }
 
-                    if(isLoggedIn) {
-                            MainScreen()
+                    if (isLoggedIn) {
+                        MainScreen()
 
                     } else {
-                        LoginScreen(authService = ServiceLocator.authService, user = dummyUser){a->
+                        LoginScreen(
+                            authService = ServiceLocator.authService,
+                            user = dummyUser
+                        ) { a ->
                             isLoggedIn = a
 
                         }
@@ -99,192 +97,105 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen() {
 
-    var route by remember { mutableStateOf("Home") }
+
+
+
+    var dummyUser = User(
+        id = 1L,
+        name = "John",
+        surname = "Doe",
+        password = "password123",
+        age = 30,
+        image_id = "laza_profilna", // Replace with your actual default image resource ID
+        description = "This is a dummy user",
+        nickname = "johndoe"
+    )
+
+
+
+
     var navController = rememberNavController()
 
-    Scaffold(
-        topBar = {
-            TopBar()
-        },
-        bottomBar = {
-            BottomBar(navController = navController)
-        }
-    ) { innerPadding ->
-
-        NavHost(navController = navController, startDestination = "Home") {
-
-            composable("Home") {
-                HomeScreen(innerPadding = innerPadding, navController = navController)
+    NavHost(navController = navController, startDestination = "Login") {
+        composable("Login") {
+            LoginScreen(authService = ServiceLocator.authService, user = dummyUser) { isLoggedIn ->
+                if (isLoggedIn && navController.currentBackStackEntry?.destination?.route != "Home") {
+                    navController.navigate("Home") {
+                        popUpTo("Login") { inclusive = true }
+                    }
+                }
             }
+        }
 
-            composable("Profile") {
+        composable("Home") {
+            ScaffoldWithBars(navController) { innerPadding ->
+                HomeScreen(innerPadding, navController)
+            }
+        }
+
+        composable("Profile") {
+            ScaffoldWithBars(navController) {
                 ProfileScreen()
             }
-
-            composable("Creator") {
-                CreatorScreen(innerPadding = innerPadding, navController = navController)
-            }
         }
 
-
+        composable("Creator") {
+            ScaffoldWithBars(navController) { innerPadding ->
+                CreatorScreen(innerPadding, navController)
+            }
+        }
     }
-
-
 }
 
+@Composable
+fun ScaffoldWithBars(navController: NavController, content: @Composable (PaddingValues) -> Unit) {
+    Scaffold(
+        topBar = { TopBar() },
+        bottomBar = { BottomBar(navController = navController) }
+    ) { innerPadding ->
+        content(innerPadding)
+    }
+}
 
 @Composable
 fun HomeScreen(
     innerPadding: PaddingValues,
-    navController: NavController
+    navController: NavController,
+    viewModel: EventViewModel = viewModel()
 ) {
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy.")
+    val events = viewModel.events.value // Directly access the value here.
 
-
+    LaunchedEffect(selectedDate) {
+        viewModel.loadEvents(selectedDate)
+    }
 
     Column(
         modifier = Modifier
             .fillMaxHeight()
             .padding(innerPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Top
     ) {
-
-
-
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
-
-
-
-
-            var selectedDate by remember {
-                mutableStateOf(LocalDate.now())
-            }
-
-            val formatter = DateTimeFormatter.ofPattern("d MMMM yyyy")
-
-
-            TextButton(
-                onClick = { selectedDate=selectedDate.minusDays(1) },
-                modifier = Modifier
-                    .padding(8.dp)
-                    .wrapContentSize(Alignment.Center),
-            ) {
-                Text(
-                    text = "<",
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold
-
-
-                )
-
-            }
-
-
-
-
-
-            TextButton(
-                onClick = { /*TODO*/     },
-                modifier = Modifier
-                    .padding(8.dp)
-                    .wrapContentSize(Alignment.Center),
-                colors = ButtonDefaults.textButtonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                ),
-
-
-                ) {
-                Text(
-                    text = selectedDate.format(formatter),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.White
-                )
-            }
-
-            TextButton(
-                onClick = { selectedDate = selectedDate.plusDays(1) },
-                modifier = Modifier
-                    .padding(8.dp)
-                    .wrapContentSize(Alignment.Center),
-            ) {
-                Text(
-                    text = ">",
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold
-
-                )
-
-            }
+        DateSelector(selectedDate, formatter) { delta ->
+            selectedDate = selectedDate.plusDays(delta)
         }
 
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp),
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-        ) {}
-
-        Column(Modifier.verticalScroll(rememberScrollState())) {
-
-
-            repeat(5) {
-
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-
-
-                    ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-
-
-                        Column(
-                            modifier = Modifier.padding(16.dp)
-                        ) {
-                            Text(
-                                text = "Biljar (14:30)",
-                                style = MaterialTheme.typography.headlineMedium
-                            )
-                            Text(
-                                text = "Ivan Lazarušić",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-
-                        Icon(
-                            painter = painterResource(id = R.drawable.eight_ball_icon),
-                            contentDescription = "",
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .align(Alignment.CenterVertically)
-                                .fillMaxWidth(.25f)
-
-                        )
-
-
-                    }
-                }
+        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            events.forEach { event ->
+                EventCard(event)
             }
         }
-
-
     }
-
 }
 
-
 @Composable
-fun DateSelector(selectedDate: LocalDate, formatter: DateTimeFormatter, onDateChange: (Long) -> Unit) {
+fun DateSelector(
+    selectedDate: LocalDate,
+    formatter: DateTimeFormatter,
+    onDateChange: (Long) -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -294,7 +205,11 @@ fun DateSelector(selectedDate: LocalDate, formatter: DateTimeFormatter, onDateCh
             Text("<", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
         }
         TextButton(onClick = { /* Display DatePicker or similar action */ }) {
-            Text(selectedDate.format(formatter), style = MaterialTheme.typography.titleMedium, color = Color.White)
+            Text(
+                selectedDate.format(formatter),
+                style = MaterialTheme.typography.headlineMedium,
+                color = Color.Black
+            )
         }
         TextButton(onClick = { onDateChange(1L) }) {
             Text(">", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
@@ -317,20 +232,10 @@ fun EventCard(event: Event) {
                 Text(event.eventName, style = MaterialTheme.typography.headlineMedium)
                 Text(event.eventType, style = MaterialTheme.typography.bodyMedium)
             }
-            Icon(
-                painter = painterResource(id = R.drawable.eight_ball_icon),
-                contentDescription = "",
-                modifier = Modifier
-                    .padding(16.dp)
-                    .align(Alignment.CenterVertically)
-                    .fillMaxWidth(.25f)
-            )
+            // Icon logic based on the event type can be handled here
         }
     }
 }
-
-
-
 
 
 //preview for HomeScreen

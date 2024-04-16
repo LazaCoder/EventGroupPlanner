@@ -1,5 +1,6 @@
 package com.example.eventapp
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -42,10 +43,11 @@ fun getUserFromSharedPreferences(context: Context): User? {
     val name = sharedPreferences.getString("name", null)
     val surname = sharedPreferences.getString("surname", null)
     val age = sharedPreferences.getInt("age", -1)
-    val imageId = sharedPreferences.getInt("imageId", R.drawable.laza_profilna) // Assuming a default drawable
+    val imageId =  sharedPreferences.getString("imageId", "laza_profilna") // Assuming a default drawable
     val description = sharedPreferences.getString("description", "")
     val nickname = sharedPreferences.getString("nickname", null)
     val id = sharedPreferences.getLong("id", -1)
+
 
 
     Log.d("1.getUserFromSharedPreferences", "User: $name $surname $age $imageId $description $nickname  $id")
@@ -56,24 +58,30 @@ fun getUserFromSharedPreferences(context: Context): User? {
 
     Log.d("2.getUserFromSharedPreferences", "User: $name $surname $age $imageId $description $nickname  $id")
 
-    return User(
+    return imageId?.let {
+        User(
         id = id,
         name = name,
         surname = surname,
         password = "123",
         age = age,
-        image_id = imageId,
+        image_id = it,
         description = description ?: "",
         nickname = nickname
     )
+    }
 }
 
 
 
+@SuppressLint("DiscouragedApi")
 @Composable
 fun ProfileScreen() {
 
     val user = getUserFromSharedPreferences(LocalContext.current)
+
+
+
 
     Log.d("ProfileScreen", "User: $user")
 
@@ -87,8 +95,12 @@ fun ProfileScreen() {
 
 
 
+@SuppressLint("DiscouragedApi")
 @Composable
 fun ProfileContent(user: User, innerPadding: PaddingValues) {
+
+    val realId = LocalContext.current.resources.getIdentifier(user?.image_id ?: "laza_profilna", "drawable", LocalContext.current.packageName)
+
     Column(
         modifier = Modifier
             .fillMaxHeight()
@@ -104,7 +116,7 @@ fun ProfileContent(user: User, innerPadding: PaddingValues) {
             ) {
 
             Image(
-                painter = painterResource(id = R.drawable.laza_profilna), contentDescription = "",
+                painter = painterResource(id = realId), contentDescription = "",
 
                 modifier = Modifier
                     .padding(16.dp)
@@ -117,19 +129,15 @@ fun ProfileContent(user: User, innerPadding: PaddingValues) {
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (user.name != null) {
-                    Text(
-                        text = user.name,
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Text(
+                    text = user.name,
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold
+                )
 
-                if (user.surname != null) {
-                    Text(text = user.surname, style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Text(text = user.surname, style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold
+                )
             }
 
         }

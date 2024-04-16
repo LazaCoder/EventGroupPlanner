@@ -6,23 +6,30 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import retrofit2.Response
+import java.time.LocalDate
+
 
 class EventViewModel : ViewModel() {
-    private val _events = mutableStateOf<List<Event>>(listOf())
+    private val _events = mutableStateOf<List<Event>>(emptyList())
     val events: State<List<Event>> = _events
 
-    fun loadEvents(date: String) {
+    fun loadEvents(date: LocalDate) {
         viewModelScope.launch {
-            val response = try {
-                RetrofitClient.instance.getEventsForDate(date)
-            } catch (e: Exception) {
-                Response.error(404, okhttp3.ResponseBody.create(null, ""))
-            }
+            try {
+                val response = RetrofitClient2.instance.getEventsForDate(date)
+                if (response.isSuccessful && response.body() != null) {
+                    _events.value = response.body()!!
+                } else {
+                    // Handle errors or empty states
 
-            if (response.isSuccessful && response.body() != null) {
-                _events.value = response.body()!!
-            } else {
-                // Handle errors or empty states
+                    println("Nesto ne stima")
+                    _events.value = listOf()
+                }
+            } catch (e: Exception) {
+                println("GRESKA NEKA")
+
+                println(e.message)
+
                 _events.value = listOf()
             }
         }

@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -11,9 +12,12 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -24,12 +28,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -43,16 +48,6 @@ import java.time.format.DateTimeFormatter
 class MainActivity : ComponentActivity() {
 
 
-    var dummyUser = User(
-        id = 1L,
-        name = "John",
-        surname = "Doe",
-        password = "password123",
-        age = 30,
-        image_id = "laza_img", // Replace with your actual default image resource ID
-        description = "This is a dummy user",
-        nickname = "johndoe"
-    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -71,21 +66,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
 
-
-                    var isLoggedIn by rememberSaveable { mutableStateOf(false) }
-
-                    if (isLoggedIn) {
-                        MainScreen()
-
-                    } else {
-                        LoginScreen(
-                            authService = ServiceLocator.authService,
-                            user = dummyUser
-                        ) { a ->
-                            isLoggedIn = a
-
-                        }
-                    }
+                    MainScreen()
 
                 }
             }
@@ -100,7 +81,7 @@ fun MainScreen() {
 
 
 
-    var dummyUser = User(
+    val dummyUser = User(
         id = 1L,
         name = "John",
         surname = "Doe",
@@ -114,7 +95,7 @@ fun MainScreen() {
 
 
 
-    var navController = rememberNavController()
+    val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = "Login") {
         composable("Login") {
@@ -183,8 +164,21 @@ fun HomeScreen(
         }
 
         Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-            events.forEach { event ->
-                EventCard(event)
+
+            if(events.isEmpty()){
+
+                Text("No events for this date",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top= 50.dp)
+                )
+
+            }
+
+            else {
+                events.forEach { event ->
+                    EventCard(event)
+                }
+
             }
         }
     }
@@ -204,11 +198,16 @@ fun DateSelector(
         TextButton(onClick = { onDateChange(-1L) }) {
             Text("<", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
         }
-        TextButton(onClick = { /* Display DatePicker or similar action */ }) {
+        TextButton(onClick = { /* Display DatePicker or similar action */ },
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+         shape = MaterialTheme.shapes.large,
+
+        ) {
             Text(
                 selectedDate.format(formatter),
                 style = MaterialTheme.typography.headlineMedium,
-                color = Color.Black
+                color = Color.White,
+                fontWeight = FontWeight.Bold
             )
         }
         TextButton(onClick = { onDateChange(1L) }) {
@@ -226,18 +225,54 @@ fun EventCard(event: Event) {
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(event.eventName, style = MaterialTheme.typography.headlineMedium)
                 Text(event.eventType, style = MaterialTheme.typography.bodyMedium)
+                Text(text = event.eventTime)
             }
+
+            val iconId = when (event.eventType) {
+                "Kof" -> R.drawable.coffee_icon
+                "Biljar" -> R.drawable.eight_ball_icon
+                "Mesina" -> R.drawable.meat_icon
+                else -> R.drawable.sun_icon
+            }
+
+            Box(modifier =Modifier, contentAlignment = Alignment.CenterStart){
+            Icon(painter = painterResource(id = iconId), contentDescription ="" ,
+                tint = Color.Black,
+                modifier = Modifier
+                    .padding(16.dp)
+                    .size(50.dp)
+
+
+            )}
+
+
             // Icon logic based on the event type can be handled here
         }
     }
 }
 
+// preview for event
+@Preview(showBackground = true)
+@Composable
+fun EventCardPreview() {
+    EventCard(
+        Event(
+            eventId = 1,
+            createdById = 1,
+            eventName = "Event Name",
+            eventDate = "2022-12-12",
+            eventDescription = "Event Description",
+            eventType = "Event Type",
+            eventTime = "Event Time"
+        )
+    )
+}
 
-//preview for HomeScreen
 
 

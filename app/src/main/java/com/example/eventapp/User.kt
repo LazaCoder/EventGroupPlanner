@@ -43,4 +43,3 @@ data class LoginRequest(
 )
 
 
-data class LoginResponse(val message: String)

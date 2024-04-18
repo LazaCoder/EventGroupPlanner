@@ -29,3 +29,16 @@ object RetrofitClient2 {
         retrofit.create(EventService::class.java)
     }
 }
+
+
+object RetrofitClient3 {
+    private const val BASE_URL = "https://asa-zda75gjltbteu-standard-apper.azuremicroservices.io"
+
+    val instance: EventService by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(EventService::class.java)
+    }
+}

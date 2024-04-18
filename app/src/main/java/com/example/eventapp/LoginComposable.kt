@@ -2,6 +2,8 @@ package com.example.eventapp
 
 
 import android.content.Context
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,41 +13,42 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CornerSize
-import androidx.compose.material3.ButtonColors
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import retrofit2.Response
-//import operations MutableState.setValue()
 
 
 
+
+@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun LoginScreen(authService: AuthService,user: User, onLogin: (Boolean) -> Unit) {
 
@@ -129,7 +132,6 @@ fun LoginScreen(authService: AuthService,user: User, onLogin: (Boolean) -> Unit)
                             withContext(Dispatchers.Main) {
                                 if (response.isSuccessful) {
                                     onLogin(true)
-                                    loginError = response.body().toString()
                                     saveUserToSharedPreferences(response.body()!!, context = context)
 
 
@@ -154,7 +156,7 @@ fun LoginScreen(authService: AuthService,user: User, onLogin: (Boolean) -> Unit)
 
                     }
                     if (loginError.isNotEmpty()) {
-                        Text(loginError, color = Color.Red)
+                        Text("Wrong Name or Password", color = Color.Red)
                     } else {
 
                         Text(loginError, color = Color.Red)
@@ -175,6 +177,19 @@ fun LoginScreen(authService: AuthService,user: User, onLogin: (Boolean) -> Unit)
 
 
     }
+
+
+
+
+
+
+
+@Preview (showBackground = true)
+@Composable
+fun LoginScreenPreview() {
+    LoginScreen(authService = ServiceLocator.authService, user = User(1, "John", "Doe", "password", 25, "image_id", "description", "nickname")) { }
+}
+
 
 
 

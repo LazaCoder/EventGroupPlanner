@@ -105,13 +105,12 @@ fun TopBar() {
 @Composable
 fun BottomBar(navController: NavController) {
 
-    // This function observes the current back stack entry and returns the current route
-    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
 
-    // Remember and derive the selected tab from the current route
+    // Observes the current back stack entry to derive the current route
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     var current by rememberSaveable { mutableStateOf(currentRoute ?: "Home") }
 
-
+    // Effect to update the current tab based on route changes
     LaunchedEffect(currentRoute) {
         current = currentRoute ?: "Home"
     }
@@ -120,134 +119,47 @@ fun BottomBar(navController: NavController) {
         modifier = Modifier
             .fillMaxWidth()
             .height(70.dp),
-        color = MaterialTheme.colorScheme.primary
+        color = MaterialTheme.colorScheme.primary,
+        tonalElevation = 4.dp  // Adds subtle elevation for depth
     ) {
+        NavigationBar(
+            containerColor = MaterialTheme.colorScheme.background,
+            contentColor = MaterialTheme.colorScheme.onPrimary
+        ) {
+            // Define tabs dynamically if possible or declare explicitly
+            val tabs = listOf("Home", "Creator", "Profile")
+            val icons = listOf(Icons.Default.Home, Icons.Default.Create, Icons.Default.AccountCircle, Icons.Default.ExitToApp)
+            val labels = listOf("Home", "Event Creator", "Profile")
 
-        NavigationBar(Modifier.fillMaxWidth()) {
-
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.primary)
-                    .fillMaxWidth()
-            ) {
-
-
+            tabs.zip(icons.zip(labels)).forEach { (route, pair) ->
+                val (icon, label) = pair
                 NavigationBarItem(
-
-                    selected = current== "Home",
+                    selected = current == route,
                     onClick = {
-                        current= "Home"
-                        navController.navigate("Home"){
-
-                            popUpTo(navController.graph.startDestinationId)
-                            launchSingleTop = true
-
-
+                        if (current != route) {
+                            current = route
+                            navController.navigate(route) {
+                                popUpTo(navController.graph.startDestinationId)
+                                launchSingleTop = true
+                            }
                         }
-
                     },
                     icon = {
                         Icon(
-                            imageVector = Icons.Default.Home,
-                            contentDescription = " ",
-                            tint = if (current == "Home") Color.Black else Color.White
+                            imageVector = icon,
+                            contentDescription = label,
+                            tint = if (current == route) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface
                         )
                     },
                     label = {
-                        Text("Home", color = Color.White)
-
-                    })
-                NavigationBarItem(
-                    selected = current == "Creator",
-                    onClick = {
-                        current = "Creator"
-                        navController.navigate("Creator"){
-
-
-                            popUpTo(navController.graph.startDestinationId)
-                            launchSingleTop = true
-
-
-                        }
-
+                        Text(label, color = if (current == route) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface)
                     },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.Create,
-                            contentDescription = " ",
-                            tint = if (current == "Creator") Color.Black else Color.White
-                        )
-                    },
-                    label = {
-                        Text("Event Creator", color = Color.White)
-                    })
-                NavigationBarItem(
-                    selected = current == "Profile",
-                    onClick = {
-                        current = "Profile"
-                        navController.navigate("Profile"){
-
-
-                            popUpTo(navController.graph.startDestinationId)
-                            launchSingleTop = true
-
-
-                        }
-
-
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.AccountCircle,
-                            contentDescription = " ",
-                            tint = if (current == "Profile") Color.Black else Color.White
-                        )
-                    },
-                    label = {
-                        Text("Profile", color = Color.White)
-                    })
-
-
-                NavigationBarItem(
-
-                    selected = current == "Login",
-                    onClick = {
-                        current = "Login"
-                        navController.navigate("Login"){
-
-
-                            popUpTo(navController.graph.startDestinationId)
-                            launchSingleTop = true
-
-
-                        }
-
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                            contentDescription = " ",
-                            tint = if (current == "Logout") Color.Black else Color.White
-                        )
-                    },
-                    label = {
-                        Text("Logout", color = Color.White)
-
-                    })
-
-
-
-
+                    alwaysShowLabel = false  // Set true to always show labels
+                )
             }
-
         }
-
-
     }
 }
-
 
 //create preview for TopBar
 @Preview

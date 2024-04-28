@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -59,7 +60,7 @@ fun CreatorScreen(innerPadding: PaddingValues, navController: NavHostController)
 
     var expanded by remember { mutableStateOf(false) }
     var selectedIndex by remember { mutableIntStateOf(0) }
-    val items = listOf("Biljar", "Kof", "Mesina", "Ostalo")
+    val items = listOf("Biljar", "Kof", "Mesina", "Ostalo","Dioklecijan","Kviz")
     var eventName by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
@@ -75,7 +76,11 @@ fun CreatorScreen(innerPadding: PaddingValues, navController: NavHostController)
 
     ) {
 
-        Spacer(modifier = Modifier.height(50.dp))
+
+
+        Spacer(modifier = Modifier.height(40.dp))
+
+
 
 
         Row(

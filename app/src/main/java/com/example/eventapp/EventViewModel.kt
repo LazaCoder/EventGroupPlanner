@@ -11,9 +11,12 @@ import java.time.LocalDate
 class EventViewModel : ViewModel() {
     private val _events = mutableStateOf<List<Event>>(emptyList())
     val events: State<List<Event>> = _events
+    private val _isLoading = mutableStateOf(false)
+    val isLoading: State<Boolean> = _isLoading
 
     fun loadEvents(date: LocalDate) {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
                 val response = RetrofitClient2.instance.getEventsForDate(date)
                 if (response.isSuccessful && response.body() != null) {
@@ -30,6 +33,8 @@ class EventViewModel : ViewModel() {
                 println(e.message)
 
                 _events.value = listOf()
+            } finally {
+                _isLoading.value = false
             }
         }
     }

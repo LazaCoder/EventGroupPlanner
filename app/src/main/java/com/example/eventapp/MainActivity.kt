@@ -3,6 +3,14 @@ package com.example.eventapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,11 +21,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.materialIcon
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CardElevation
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -26,12 +46,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,18 +64,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.eventapp.ui.theme.EventAppTheme
+import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import kotlin.math.abs
 
 class MainActivity : ComponentActivity() {
 
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
-
-
-
 
         super.onCreate(savedInstanceState)
         setContent {
@@ -147,6 +167,10 @@ fun HomeScreen(
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy.")
     val events = viewModel.events.value // Directly access the value here.
+    val isLoading = viewModel.isLoading.value
+    val swipeThreshold = 200f // Define a threshold for swipe sensitivity
+    var totalDragDistance by remember { mutableFloatStateOf(0f) }
+
 
     LaunchedEffect(selectedDate) {
         viewModel.loadEvents(selectedDate)
@@ -155,7 +179,20 @@ fun HomeScreen(
     Column(
         modifier = Modifier
             .fillMaxHeight()
-            .padding(innerPadding),
+            .padding(innerPadding)
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures { change, dragAmount ->
+                    totalDragDistance += dragAmount
+                    if (abs(totalDragDistance) > swipeThreshold) {
+                        if (totalDragDistance > 0) {
+                            selectedDate = selectedDate.minusDays(1)
+                        } else {
+                            selectedDate = selectedDate.plusDays(1)
+                        }
+                        totalDragDistance = 0f // Reset the accumulated drag distance
+                    }
+                }
+            },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
@@ -163,24 +200,63 @@ fun HomeScreen(
             selectedDate = selectedDate.plusDays(delta)
         }
 
-        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
 
-            if(events.isEmpty()){
-
-                Text("No events for this date",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(top= 50.dp)
-                )
-
+        if (isLoading) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
+        } else {
 
-            else {
-                events.forEach { event ->
-                    EventCard(event)
+
+            LazyColumn() {
+
+                if (events.isEmpty()) {
+
+                    item {
+
+                        Text(
+                            "No events for this date",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 50.dp)
+                        )
+                    }
+                } else {
+
+                    itemsIndexed(events) { index,event ->
+                        AnimatedEventCard(event, index)
+                    }
+
                 }
-
             }
+
         }
+    }
+}
+
+
+@Composable
+fun AnimatedEventCard(event: Event, index: Int) {
+
+    var isVisible by remember { mutableStateOf(false) }
+
+    // Apply a staggered effect based on the index
+    LaunchedEffect(key1 = index) {
+        delay(100L * index) // Stagger the animation by 100ms per card
+        isVisible = true
+    }
+
+
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = fadeIn(animationSpec = tween(durationMillis = 1000)) +
+                scaleIn(initialScale = 0.8f, animationSpec = tween(durationMillis = 1000)) +
+                slideInVertically(initialOffsetY = { it / 3 }, animationSpec = tween(durationMillis = 1000)),
+        exit = fadeOut(animationSpec = tween(durationMillis = 1000))
+    ) {
+        EventCard(event)
     }
 }
 
@@ -190,38 +266,48 @@ fun DateSelector(
     formatter: DateTimeFormatter,
     onDateChange: (Long) -> Unit
 ) {
+
+
+
+
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        TextButton(onClick = { onDateChange(-1L) }) {
-            Text("<", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+        IconButton(onClick = { onDateChange(-1L) }) {
+            Icon(Icons.Filled.ArrowBack, contentDescription = "Next Day")
         }
         TextButton(onClick = { /* Display DatePicker or similar action */ },
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-         shape = MaterialTheme.shapes.large,
-
         ) {
             Text(
                 selectedDate.format(formatter),
                 style = MaterialTheme.typography.headlineMedium,
-                color = Color.White,
-                fontWeight = FontWeight.Bold
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
-        TextButton(onClick = { onDateChange(1L) }) {
-            Text(">", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+        IconButton(onClick = { onDateChange(1L) }) {
+            Icon(Icons.Filled.ArrowForward, contentDescription = "Next Day")
         }
     }
 }
 
 @Composable
 fun EventCard(event: Event) {
+
+    val cardElevation = CardDefaults.cardElevation(
+        defaultElevation = 8.dp,
+        pressedElevation = 12.dp,
+        focusedElevation = 10.dp,
+        hoveredElevation = 10.dp
+    )
+
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(16.dp),
+        elevation = cardElevation
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -238,6 +324,8 @@ fun EventCard(event: Event) {
                 "Kof" -> R.drawable.coffee_icon
                 "Biljar" -> R.drawable.eight_ball_icon
                 "Mesina" -> R.drawable.meat_icon
+                "Dioklecijan" -> R.drawable.liquor_icon
+                "Kviz" -> R.drawable.kviz_icon
                 else -> R.drawable.sun_icon
             }
 
@@ -247,8 +335,6 @@ fun EventCard(event: Event) {
                 modifier = Modifier
                     .padding(16.dp)
                     .size(50.dp)
-
-
             )}
 
 

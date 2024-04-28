@@ -4,24 +4,13 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,12 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-
 
 
 fun getUserFromSharedPreferences(context: Context): User? {
@@ -99,7 +83,7 @@ fun ProfileScreen() {
 @Composable
 fun ProfileContent(user: User, innerPadding: PaddingValues) {
 
-    val realId = LocalContext.current.resources.getIdentifier(user?.image_id ?: "laza_profilna", "drawable", LocalContext.current.packageName)
+    val realId = LocalContext.current.resources.getIdentifier(user.image_id ?: "laza_profilna", "drawable", LocalContext.current.packageName)
 
     Column(
         modifier = Modifier
@@ -251,6 +235,25 @@ fun ProfileContent(user: User, innerPadding: PaddingValues) {
             }
 
         }
+
+        Button(
+            onClick = { },
+            modifier = Modifier.fillMaxWidth(0.5f).align(Alignment.Start),
+            shape = MaterialTheme.shapes.medium,
+
+
+
+            ) {
+            Text(
+                text = "Update profile",
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White
+            )
+
+        }
+
+
 
 
     }

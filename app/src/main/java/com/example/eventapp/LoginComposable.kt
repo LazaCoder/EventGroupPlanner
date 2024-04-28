@@ -2,8 +2,6 @@ package com.example.eventapp
 
 
 import android.content.Context
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,18 +11,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CornerSize
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,7 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
@@ -46,11 +41,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 
-
-
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
-fun LoginScreen(authService: AuthService,user: User, onLogin: (Boolean) -> Unit) {
+fun LoginScreen(authService: AuthService, user: User, onLogin: (Boolean) -> Unit) {
 
     val context = LocalContext.current
     var password by remember { mutableStateOf("") }
@@ -78,7 +71,7 @@ fun LoginScreen(authService: AuthService,user: User, onLogin: (Boolean) -> Unit)
     ) {
 
         Column(
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxWidth()
@@ -92,25 +85,27 @@ fun LoginScreen(authService: AuthService,user: User, onLogin: (Boolean) -> Unit)
                     .padding(16.dp),
 
 
-            ) {
+                ) {
 
 
-
-                Column(verticalArrangement = Arrangement.Center,
+                Column(
+                    verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxSize()
-                    ) {
+                ) {
 
-                    Icon(painter = painterResource(id = R.drawable.main_icon_transparent), contentDescription ="",
+                    Icon(
+                        painter = painterResource(id = R.drawable.main_icon_transparent),
+                        contentDescription = "",
                         tint = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(300.dp)
+                            .height(250.dp)
 
                     )
 
 
-                    TextField(
+                    OutlinedTextField(
                         value = name, onValueChange = { input -> name = input },
                         label = {
                             Text("Name")
@@ -121,42 +116,53 @@ fun LoginScreen(authService: AuthService,user: User, onLogin: (Boolean) -> Unit)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    TextField(
+                    OutlinedTextField(
                         value = password,
                         onValueChange = { input -> password = input },
-                        label = { Text("Password") })
-
-                    TextButton(onClick = {   GlobalScope.launch {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            val response = authService.login(LoginRequest(name, password))
-                            withContext(Dispatchers.Main) {
-                                if (response.isSuccessful) {
-                                    onLogin(true)
-                                    saveUserToSharedPreferences(response.body()!!, context = context)
+                        label = { Text("Password") },
+                        visualTransformation = PasswordVisualTransformation(),
 
 
-                                } else {
-                                    loginError = response.errorBody()?.string() ?: "Unknown error"
-                                    onLogin(false)
+                        )
+
+                    TextButton(
+                        onClick = {
+                            GlobalScope.launch {
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    val response = authService.login(LoginRequest(name, password))
+                                    withContext(Dispatchers.Main) {
+                                        if (response.isSuccessful) {
+                                            onLogin(true)
+                                            saveUserToSharedPreferences(
+                                                response.body()!!,
+                                                context = context
+                                            )
+
+
+                                        } else {
+                                            loginError =
+                                                response.errorBody()?.string() ?: "Unknown error"
+                                            onLogin(false)
+                                        }
+                                    }
                                 }
                             }
-                        }
-                    }
-                    },
+                        },
                         modifier = Modifier
                             .align(Alignment.Start)
-                            .padding(16.dp),
+                            .padding(24.dp).width(120.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                         ),
-                                shape = MaterialTheme.shapes.small.copy(
-                                    CornerSize(25))
-                        ) {
+                        shape = MaterialTheme.shapes.medium.copy(
+                            CornerSize(25)
+                        )
+                    ) {
                         Text("Login")
 
                     }
                     if (loginError.isNotEmpty()) {
-                        Text("Wrong Name or Password", color = Color.Red)
+                        Text(loginError, color = Color.Red)
                     } else {
 
                         Text(loginError, color = Color.Red)
@@ -164,11 +170,7 @@ fun LoginScreen(authService: AuthService,user: User, onLogin: (Boolean) -> Unit)
                     }
 
 
-
                 }
-
-                }
-
 
             }
 
@@ -179,15 +181,16 @@ fun LoginScreen(authService: AuthService,user: User, onLogin: (Boolean) -> Unit)
     }
 
 
+}
 
 
-
-
-
-@Preview (showBackground = true)
+@Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {
-    LoginScreen(authService = ServiceLocator.authService, user = User(1, "John", "Doe", "password", 25, "image_id", "description", "nickname")) { }
+    LoginScreen(
+        authService = ServiceLocator.authService,
+        user = User(1, "John", "Doe", "password", 25, "image_id", "description", "nickname")
+    ) { }
 }
 
 

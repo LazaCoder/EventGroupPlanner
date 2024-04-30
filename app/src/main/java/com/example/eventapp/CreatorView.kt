@@ -7,15 +7,22 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarData
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -47,8 +54,9 @@ import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun CreatorScreen(innerPadding: PaddingValues, navController: NavHostController) {
+ fun CreatorScreen(innerPadding: PaddingValues, navController: NavHostController) {
 
+    val snackbarHostState = remember { SnackbarHostState() }
     var date by remember { mutableStateOf(LocalDate.now()) }
     var time by remember {
         mutableStateOf(LocalTime.now())
@@ -56,6 +64,11 @@ fun CreatorScreen(innerPadding: PaddingValues, navController: NavHostController)
 
 
     var showDialog by remember { mutableStateOf(false) }
+
+
+    var dialogMessage by remember { mutableStateOf("") }
+    var showConfirmDialog by remember { mutableStateOf(false) }
+
     var showTimePicker by remember { mutableStateOf(false) }
 
     var expanded by remember { mutableStateOf(false) }
@@ -65,275 +78,324 @@ fun CreatorScreen(innerPadding: PaddingValues, navController: NavHostController)
     var description by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
 
+   Box(modifier = Modifier.fillMaxSize()) {
 
+       Column(
+           horizontalAlignment = Alignment.CenterHorizontally,
+           verticalArrangement = Arrangement.spacedBy(16.dp),
+           modifier = Modifier
+               .padding(innerPadding)
+               .fillMaxSize()
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier
-            .padding(innerPadding)
-            .fillMaxSize()
+       ) {
 
-    ) {
 
+           Spacer(modifier = Modifier.height(40.dp))
 
 
-        Spacer(modifier = Modifier.height(40.dp))
 
+           Row(
+               horizontalArrangement = Arrangement.SpaceBetween,
+               verticalAlignment = Alignment.CenterVertically,
+               modifier = Modifier
+                   .fillMaxWidth(0.75f)
+                   .wrapContentHeight()
+           ) {
 
 
+               TextField(value = items[selectedIndex], onValueChange = {}, label = {
 
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth(0.75f)
-        ) {
+                   Text(text = "Event Type", style = MaterialTheme.typography.bodyMedium)
 
+               }, readOnly = true,
+                   modifier = Modifier
+                       .fillMaxWidth(0.6f)
+                       .align(Alignment.CenterVertically)
 
-            TextField(value = items[selectedIndex], onValueChange = {}, label = {
+               )
 
-                Text(text = "Event Type", style = MaterialTheme.typography.bodyMedium)
+               Button(
+                   onClick = { expanded = true },
+                   modifier = Modifier
+                       .fillMaxWidth(0.8f)
+                       .align(Alignment.CenterVertically),
+                   shape = MaterialTheme.shapes.medium,
 
-            }, readOnly = true,
-                modifier = Modifier.fillMaxWidth(0.6f)
 
-            )
+                   ) {
+                   Text(
+                       text = "Select Type",
+                       textAlign = TextAlign.Center,
+                       style = MaterialTheme.typography.bodyMedium,
+                       color = Color.White
+                   )
 
-            Button(
-                onClick = { expanded = true },
-                modifier = Modifier.fillMaxWidth(0.8f),
-                shape = MaterialTheme.shapes.medium,
+                   DropdownMenu(
+                       expanded = expanded,
+                       onDismissRequest = { expanded = false },
+                   ) {
+                       items.forEachIndexed { index, s ->
 
+                           DropdownMenuItem(text = { Text(s) },
+                               onClick = {
+                                   selectedIndex = index
+                                   expanded = false
+                               })
 
-                ) {
-                Text(
-                    text = "Select Type",
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White
-                )
+                       }
 
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false },
-                ) {
-                    items.forEachIndexed { index, s ->
 
-                        DropdownMenuItem(text = { Text(s) },
-                            onClick = {
-                                selectedIndex = index
-                                expanded = false
-                            })
+                   }
 
-                    }
+               }
 
+           }
 
-                }
 
-            }
 
-        }
 
 
 
+           TextField(value = eventName, onValueChange = { s -> eventName = s }, label = {
 
+               Text(
+                   text = "Event Name",
+                   style = MaterialTheme.typography.bodyMedium
+               )
 
+           },
+               modifier = Modifier.fillMaxWidth(0.75f)
+           )
 
-        TextField(value = eventName, onValueChange = { s -> eventName = s }, label = {
+           Box(
+               modifier = Modifier
+                   .clickable(onClick = { showDialog = true })
+                   .fillMaxWidth(0.75f)
+           ) {
 
-            Text(
-                text = "Event Name",
-                style = MaterialTheme.typography.bodyMedium
-            )
+               Row(
+                   horizontalArrangement = Arrangement.SpaceBetween,
+                   modifier = Modifier.fillMaxWidth(),
+                   verticalAlignment = Alignment.CenterVertically
 
-        },
-            modifier = Modifier.fillMaxWidth(0.75f)
-        )
+               ) {
 
-        Box(
-            modifier = Modifier
-                .clickable(onClick = { showDialog = true })
-                .fillMaxWidth(0.75f)
-        ) {
 
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                   TextField(
+                       modifier = Modifier
+                           .fillMaxWidth(0.6f)
+                           .align(Alignment.CenterVertically),
+                       value = date.format(DateTimeFormatter.ofPattern("d MMMM yyyy")),
+                       onValueChange = { },
+                       readOnly = true,
+                       label = { Text("Date") },
 
-            ) {
+                       )
 
+                   Button(
+                       onClick = { showDialog = true },
+                       modifier = Modifier.fillMaxWidth(0.8f),
+                       shape = MaterialTheme.shapes.medium,
 
-                TextField(
-                    modifier = Modifier
-                        .fillMaxWidth(0.6f),
-                    value = date.format(DateTimeFormatter.ofPattern("d MMMM yyyy")),
-                    onValueChange = { },
-                    readOnly = true,
-                    label = { Text("Date") },
 
-                    )
+                       ) {
+                       Text(
+                           text = "Select Date",
+                           textAlign = TextAlign.Center,
+                           style = MaterialTheme.typography.bodyMedium,
+                           color = Color.White
+                       )
 
-                Button(
-                    onClick = { showDialog = true },
-                    modifier = Modifier.fillMaxWidth(0.8f),
-                    shape = MaterialTheme.shapes.medium,
+                   }
 
 
-                    ) {
-                    Text(
-                        text = "Select Date",
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White
-                    )
 
-                }
+                   if (showDialog) {
+                       DatePickerDialog(
+                           onDismissRequest = { showDialog = false },
+                           onDateChange = {
+                               date = it
+                               showDialog = false
+                           },
+                           initialDate = date,
+                           title = { Text("Select Date") },
+                           today = LocalDate.now(),
 
+                           )
+                   }
 
 
-                if (showDialog) {
-                    DatePickerDialog(
-                        onDismissRequest = { showDialog = false },
-                        onDateChange = {
-                            date = it
-                            showDialog = false
-                        },
-                        initialDate = date,
-                        title = { Text("Select Date") },
-                        today = LocalDate.now(),
+               }
 
-                        )
-                }
+           }
 
 
-            }
+           Row(
+               horizontalArrangement = Arrangement.SpaceBetween,
+               modifier = Modifier.fillMaxWidth(0.75f),
+               verticalAlignment = Alignment.CenterVertically
 
-        }
+           ) {
 
 
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth(0.75f),
-            verticalAlignment = Alignment.CenterVertically
+               TextField(
+                   modifier = Modifier
+                       .fillMaxWidth(0.6f),
+                   value = time.format(DateTimeFormatter.ofPattern("HH:mm")),
+                   onValueChange = { },
+                   readOnly = true,
+                   label = { Text("Hour") },
 
-        ) {
+                   )
 
+               Button(
+                   onClick = { showTimePicker = true },
+                   modifier = Modifier.fillMaxWidth(0.8f),
+                   shape = MaterialTheme.shapes.medium,
 
-            TextField(
-                modifier = Modifier
-                    .fillMaxWidth(0.6f),
-                value = time.format(DateTimeFormatter.ofPattern("HH:mm")),
-                onValueChange = { },
-                readOnly = true,
-                label = { Text("Hour") },
 
-                )
+                   ) {
+                   Text(
+                       text = "Select Hour",
+                       textAlign = TextAlign.Center,
+                       style = MaterialTheme.typography.bodyMedium,
+                       color = Color.White
+                   )
 
-            Button(
-                onClick = { showTimePicker = true },
-                modifier = Modifier.fillMaxWidth(0.8f),
-                shape = MaterialTheme.shapes.medium,
+               }
 
 
-                ) {
-                Text(
-                    text = "Select Hour",
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White
-                )
+           }
 
-            }
 
 
-        }
+           if (showTimePicker) {
+               TimePickerDialog(
+                   onDismissRequest = { showTimePicker = false },
+                   onTimeChange = {
+                       time = it
+                       showTimePicker = false
+                   },
+                   is24HourFormat = true,
+                   initialTime = LocalTime.now(),
+                   title = { Text("Select Time") },
 
+                   )
 
 
-        if (showTimePicker) {
-            TimePickerDialog(
-                onDismissRequest = { showTimePicker = false },
-                onTimeChange = {
-                    time = it
-                    showTimePicker = false
-                },
-                is24HourFormat = true,
-                initialTime = LocalTime.now(),
-                title = { Text("Select Time") },
+           }
 
-                )
 
 
-        }
+           TextField(
+               value = description,
+               onValueChange = { description = it },
+               label = { Text("Description") },
+               modifier = Modifier
+                   .fillMaxWidth(.75f)
+                   .height(150.dp), // Adjust the height as needed
+               maxLines = 5// Allow as many lines as needed
+           )
+           Row(
+               horizontalArrangement = Arrangement.Start, modifier = Modifier.fillMaxWidth(0.75f)
 
+           ) {
 
 
-        TextField(
-            value = description,
-            onValueChange = { description = it },
-            label = { Text("Description") },
-            modifier = Modifier
-                .fillMaxWidth(.75f)
-                .height(150.dp), // Adjust the height as needed
-            maxLines = 5// Allow as many lines as needed
-        )
-        Row(
-            horizontalArrangement = Arrangement.Start, modifier = Modifier.fillMaxWidth(0.75f)
+               Button(
+                   onClick = {
 
-        ) {
+                       coroutineScope.launch {
+                          val posted=  postEvent(
+                               Event(
+                                   0,
+                                   0,
+                                   eventName,
+                                   date.toString(),
+                                   description,
+                                   items[selectedIndex],
+                                   time.toString()
 
 
-            Button(
-                onClick = {
+                               )
+                           )
 
-                        coroutineScope.launch {
-                            postEvent(Event(
-                                0,
-                                0,
-                                eventName,
-                                date.toString(),
-                                description,
-                                items[selectedIndex],
-                                time.toString()
-                            ))
-                        }
-                },
-                modifier = Modifier.fillMaxWidth(0.5f),
-                shape = MaterialTheme.shapes.medium,
 
+                           if (posted) {
+                               // Show a Dialog with a message
+                               dialogMessage = "Event submitted"
+                               showConfirmDialog = true
+                           } else {
+                               dialogMessage = "Failed to submit event"
+                               showConfirmDialog = true
+                           }
 
-                ) {
-                Text(
-                    text = "Submit",
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color.White
-                )
+                       }
 
-            }
 
-        }
+                   },
+                   modifier = Modifier.fillMaxWidth(0.5f),
+                   shape = MaterialTheme.shapes.medium,
 
-    }
+
+                   ) {
+                   Text(
+                       text = "Submit",
+                       textAlign = TextAlign.Center,
+                       style = MaterialTheme.typography.headlineSmall,
+                       color = Color.White
+                   )
+
+
+               }
+
+           }
+
+
+       }
+
+
+       if (showConfirmDialog) {
+           AlertDialog(
+               onDismissRequest = { showConfirmDialog = false },
+               title = { Text(text = "Notification") },
+               text = { Text(text = dialogMessage) },
+               confirmButton = {
+                   Button(onClick = { showConfirmDialog = false
+                    navController.navigate("Home")
+
+                   }) {
+                       Text("OK")
+                   }
+               },
+               modifier = Modifier.align(Alignment.Center)
+           )
+       }
+
+
+
+
+   }
+
+
 
 
 }
 
 
-suspend fun postEvent(event: Event) {
+suspend fun postEvent(event: Event): Boolean {
     // Implement the logic to post the event to the server
 
     val response = RetrofitClient3.instance.createEvent(event)
     if (response.isSuccessful) {
 
         println("Event posted successfully: !")
-    } else {
+
+        return true
+    }
         // Handle error
         println("Failed to post event: ${response.errorBody()?.string()}")
-    }
-
-
-
+return false
 }
 
 

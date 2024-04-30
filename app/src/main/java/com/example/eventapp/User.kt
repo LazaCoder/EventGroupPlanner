@@ -12,7 +12,7 @@ data class User(
     val password: String,
     val age: Int,
     val image_id: String,
-    val description: String,
+    var description: String,
     val nickname: String?
 )
 

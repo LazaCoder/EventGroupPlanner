@@ -1,18 +1,18 @@
 package com.example.eventapp
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Create
-import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -39,7 +39,7 @@ import androidx.navigation.compose.rememberNavController
 
 
 @Composable
-fun TopBar() {
+fun TopBar(navController: NavController, toggleDrawer: () -> Unit) {
 
 
     Surface(
@@ -49,51 +49,40 @@ fun TopBar() {
         color = MaterialTheme.colorScheme.background
     ) {
         Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 4.dp)
+
         ) {
 
 
-            IconButton(
-                onClick = { /*TODO*/ },
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth(1.0f)
+            IconButton(onClick = toggleDrawer,
+                modifier = Modifier.fillMaxHeight()
+                    .width(90.dp)
+
+
             ) {
 
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
+                Icon(imageVector = Icons.Filled.Menu, contentDescription = "Hamburger",
                     modifier = Modifier
-                        .background(MaterialTheme.colorScheme.background)
-                        .fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Vlakovi",
-                        color = Color.Black,
-                        style = MaterialTheme.typography.headlineLarge,
-                        modifier = Modifier.padding(0.dp),
-                        fontWeight = FontWeight.Bold
+                        .width(48.dp)
+                        .fillMaxHeight()
                     )
+
+            }
+
+               Text(text = navController.currentDestination?.route.toString(),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold
+                   )
+
+
                     Icon(
                         painter = painterResource(id = R.drawable.main_icon_transparent),
                         contentDescription = " ",
                         tint = Color.Black,
 
                         )
-
-
-                    Text(
-                        text = "Lete",
-                        color = Color.Black,
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(0.dp)
-                    )
-                }
-
-            }
-
 
         }
 
@@ -128,7 +117,7 @@ fun BottomBar(navController: NavController) {
         ) {
             // Define tabs dynamically if possible or declare explicitly
             val tabs = listOf("Home", "Creator", "Profile")
-            val icons = listOf(Icons.Default.Home, Icons.Default.Create, Icons.Default.AccountCircle, Icons.Default.ExitToApp)
+            val icons = listOf(Icons.Default.Home, Icons.Default.Create, Icons.Default.AccountCircle, Icons.AutoMirrored.Filled.ExitToApp)
             val labels = listOf("Home", "Event Creator", "Profile")
 
             tabs.zip(icons.zip(labels)).forEach { (route, pair) ->
@@ -151,9 +140,6 @@ fun BottomBar(navController: NavController) {
                             tint = if (current == route) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface
                         )
                     },
-                    label = {
-                        Text(label, color = if (current == route) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface)
-                    },
                     alwaysShowLabel = false  // Set true to always show labels
                 )
             }
@@ -165,8 +151,8 @@ fun BottomBar(navController: NavController) {
 @Preview
 @Composable
 fun TopBarPreview() {
-    TopBar()
 
+    TopBar(navController = rememberNavController(), toggleDrawer = {})
 }
 
 //create preview for BottomBar

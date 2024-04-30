@@ -4,12 +4,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,40 +24,37 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.materialIcon
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CardElevation
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DrawerState
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -64,7 +63,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.eventapp.ui.theme.EventAppTheme
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
@@ -97,64 +98,107 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen() {
-
-
-
-
     val dummyUser = User(
         id = 1L,
         name = "John",
         surname = "Doe",
         password = "password123",
         age = 30,
-        image_id = "laza_profilna", // Replace with your actual default image resource ID
+        image_id = "laza_profilna",  // Replace with your actual default image resource ID
         description = "This is a dummy user",
         nickname = "johndoe"
     )
 
-
-
-
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val navController = rememberNavController()
+    val scope = rememberCoroutineScope()
 
-    NavHost(navController = navController, startDestination = "Login") {
-        composable("Login") {
-            LoginScreen(authService = ServiceLocator.authService, user = dummyUser) { isLoggedIn ->
-                if (isLoggedIn && navController.currentBackStackEntry?.destination?.route != "Home") {
-                    navController.navigate("Home") {
-                        popUpTo("Login") { inclusive = true }
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+
+
+                AnimatedVisibility(visible = drawerState.isOpen,
+                    enter =slideInHorizontally( animationSpec = tween(durationMillis = 500)),
+                    ) {
+                    DrawerContent(drawerState, scope, navController)
+
+
+            }
+        }
+    ) {
+        NavHost(navController = navController, startDestination = "Login") {
+            composable("Login") {
+                LoginScreen(authService = ServiceLocator.authService, user = dummyUser) { isLoggedIn ->
+                    if (isLoggedIn) {
+                        navController.navigate("Home") {
+                            popUpTo("Login") { inclusive = true }
+                        }
                     }
                 }
             }
-        }
-
-        composable("Home") {
-            ScaffoldWithBars(navController) { innerPadding ->
-                HomeScreen(innerPadding, navController)
+            composable("Home") {
+                ScaffoldWithBars(drawerState, scope, navController) { innerPadding ->
+                    HomeScreen(innerPadding, navController)
+                }
             }
-        }
-
-        composable("Profile") {
-            ScaffoldWithBars(navController) {
-                ProfileScreen()
+            composable("Profile") {
+                ScaffoldWithBars(drawerState, scope, navController) {
+                    ProfileScreen(navController)
+                }
             }
-        }
-
-        composable("Creator") {
-            ScaffoldWithBars(navController) { innerPadding ->
-                CreatorScreen(innerPadding, navController)
+            composable("Creator") {
+                ScaffoldWithBars(drawerState, scope, navController) { innerPadding ->
+                    CreatorScreen(innerPadding, navController)
+                }
             }
         }
     }
 }
+@Composable
+fun DrawerContent(drawerState: DrawerState, scope: CoroutineScope, navController: NavController) {
+    Column(modifier = Modifier
+        .fillMaxHeight().fillMaxWidth(0.5f)
+        .background(MaterialTheme.colorScheme.surface)
+
+
+    ) {
+        Text("Home", modifier = Modifier.clickable {
+            navigateAndCloseDrawer("Home", drawerState, scope, navController)
+        })
+        Text("Profile", modifier = Modifier.clickable {
+            navigateAndCloseDrawer("Profile", drawerState, scope, navController)
+        })
+        Text("Creator", modifier = Modifier.clickable {
+            navigateAndCloseDrawer("Creator", drawerState, scope, navController)
+        })
+    }
+}
+
+fun navigateAndCloseDrawer(destination: String, drawerState: DrawerState, scope: CoroutineScope, navController: NavController) {
+    navController.navigate(destination) {
+        popUpTo(navController.graph.startDestinationId)
+        launchSingleTop = true
+    }
+    scope.launch { drawerState.close() }
+}
 
 @Composable
-fun ScaffoldWithBars(navController: NavController, content: @Composable (PaddingValues) -> Unit) {
+fun ScaffoldWithBars(drawerState: DrawerState, scope: CoroutineScope, navController: NavController, content: @Composable (PaddingValues) -> Unit) {
     Scaffold(
-        topBar = { TopBar() },
-        bottomBar = { BottomBar(navController = navController) }
-    ) { innerPadding ->
-        content(innerPadding)
+        topBar = { TopBar(navController) { toggleDrawer(drawerState, scope) } },
+        content = content,
+        bottomBar = { BottomBar(navController) },
+    )
+}
+
+fun toggleDrawer(drawerState: DrawerState, scope: CoroutineScope) {
+    scope.launch {
+        if (drawerState.isClosed) {
+            drawerState.open()
+        } else {
+            drawerState.close()
+        }
     }
 }
 
@@ -271,7 +315,12 @@ fun DateSelector(
 
 
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = 0
+                    .dp
+            ),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {

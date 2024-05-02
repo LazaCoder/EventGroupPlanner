@@ -1,5 +1,6 @@
 package com.example.eventapp
 
+import ChatScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -152,13 +153,25 @@ fun MainScreen() {
                     CreatorScreen(innerPadding, navController)
                 }
             }
+
+            composable("Chat"){
+                ScaffoldWithBars(drawerState,scope ,navController) {
+
+                    ChatScreen(it)
+
+                }
+
+
+            }
+
         }
     }
 }
 @Composable
 fun DrawerContent(drawerState: DrawerState, scope: CoroutineScope, navController: NavController) {
     Column(modifier = Modifier
-        .fillMaxHeight().fillMaxWidth(0.5f)
+        .fillMaxHeight()
+        .fillMaxWidth(0.5f)
         .background(MaterialTheme.colorScheme.surface)
 
 
@@ -169,8 +182,8 @@ fun DrawerContent(drawerState: DrawerState, scope: CoroutineScope, navController
         Text("Profile", modifier = Modifier.clickable {
             navigateAndCloseDrawer("Profile", drawerState, scope, navController)
         })
-        Text("Creator", modifier = Modifier.clickable {
-            navigateAndCloseDrawer("Creator", drawerState, scope, navController)
+        Text("Chat", modifier = Modifier.clickable {
+            navigateAndCloseDrawer("Chat", drawerState, scope, navController)
         })
     }
 }
@@ -255,7 +268,7 @@ fun HomeScreen(
         } else {
 
 
-            LazyColumn() {
+            LazyColumn{
 
                 if (events.isEmpty()) {
 

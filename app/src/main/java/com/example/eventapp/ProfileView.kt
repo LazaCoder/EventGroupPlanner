@@ -86,7 +86,7 @@ fun ProfileScreen(navController: NavHostController) {
 @Composable
 fun ProfileContent(user: User, innerPadding: PaddingValues, navController: NavHostController) {
 
-    user.description = user.description.replace("\n", " ")
+    user.description = user.description.replace("\n", "")
 
     val cardElevation = CardDefaults.cardElevation(
         defaultElevation = 8.dp,
@@ -113,23 +113,29 @@ fun ProfileContent(user: User, innerPadding: PaddingValues, navController: NavHo
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
 
             ) {
 
-            Image(
-                painter = painterResource(id = realId), contentDescription = "",
 
-                modifier = Modifier
-                    .padding(16.dp)
-                    .align(Alignment.CenterVertically)
-                    .size(200.dp)
-                    .clip(MaterialTheme.shapes.large),
-                contentScale = ContentScale.Crop
-            )
+            Box(modifier = Modifier.size(200.dp)) {
+                Image(
+                    painter = painterResource(id = realId), contentDescription = "",
+
+                    modifier = Modifier
+                        .size(200.dp)
+                        .clip(MaterialTheme.shapes.large),
+                    contentScale = ContentScale.Crop
+                )
+
+            }
 
             Column(
                 verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.width(250.dp)
+
             ) {
                 Text(
                     text = user.name,
@@ -162,7 +168,7 @@ fun ProfileContent(user: User, innerPadding: PaddingValues, navController: NavHo
             Card(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(4.dp),
+                    .padding(bottom = 4.dp, top = 4.dp, start = 4.dp, end = 8.dp),
                 shape = MaterialTheme.shapes.medium,
                 elevation = cardElevation
 
@@ -199,7 +205,7 @@ fun ProfileContent(user: User, innerPadding: PaddingValues, navController: NavHo
             Card(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(4.dp),
+                    .padding(bottom = 4.dp, top = 4.dp, start = 8.dp, end = 4.dp),
                 shape = MaterialTheme.shapes.medium,
                 elevation = cardElevation
 

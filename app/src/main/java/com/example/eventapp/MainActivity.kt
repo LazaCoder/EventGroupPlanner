@@ -58,6 +58,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -177,19 +178,38 @@ fun DrawerContent(drawerState: DrawerState, scope: CoroutineScope, navController
     Column(modifier = Modifier
         .fillMaxHeight()
         .fillMaxWidth(0.5f)
-        .background(MaterialTheme.colorScheme.surface)
+        .background(MaterialTheme.colorScheme.surface),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top,
+
 
 
     ) {
+
         Text("Home", modifier = Modifier.clickable {
             navigateAndCloseDrawer("Home", drawerState, scope, navController)
-        })
+        }.padding(top = 32.dp),
+            fontStyle = MaterialTheme.typography.headlineLarge.fontStyle,
+            fontWeight = FontWeight.Bold,
+
+        )
         Text("Profile", modifier = Modifier.clickable {
             navigateAndCloseDrawer("Profile", drawerState, scope, navController)
-        })
+
+        }.padding(top = 16.dp),
+           fontStyle = MaterialTheme.typography.headlineLarge.fontStyle,
+            fontWeight = FontWeight.Bold,
+
+
+
+        )
         Text("Chat", modifier = Modifier.clickable {
             navigateAndCloseDrawer("Chat", drawerState, scope, navController)
-        })
+        }.padding(top = 16.dp),
+            fontStyle = MaterialTheme.typography.headlineLarge.fontStyle,
+            fontWeight = FontWeight.Bold,
+
+        )
     }
 }
 

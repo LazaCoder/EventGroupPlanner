@@ -24,8 +24,9 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.eventapp.ChatViewModel
+import com.example.eventapp.User
+import com.example.eventapp.getUserFromSharedPreferences
 
 import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.launch
@@ -39,6 +40,9 @@ fun ChatScreen(paddingValues: PaddingValues, viewModel: ChatViewModel) {
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
     var textFieldState by remember { mutableStateOf(TextFieldValue()) }
+    val loggedInUser = getUserFromSharedPreferences(LocalContext.current)
+
+
 
     Log.d("ChatScreen", "Recomposing with ${messages.size} messages")
 
@@ -47,14 +51,15 @@ fun ChatScreen(paddingValues: PaddingValues, viewModel: ChatViewModel) {
     LaunchedEffect(messages.size) {
         coroutineScope.launch {
 
-            if(messages.isNotEmpty()){
-            listState.animateScrollToItem(messages.size - 1) }
+            if (messages.isNotEmpty()) {
+                listState.animateScrollToItem(messages.size - 1)
+            }
         }
     }
     Scaffold(
         modifier = Modifier.padding(bottom = 70.dp),
 
-             // Bottom bar for user input
+        // Bottom bar for user input
     ) { innerPadding ->
         LazyColumn(
             state = listState,
@@ -67,7 +72,7 @@ fun ChatScreen(paddingValues: PaddingValues, viewModel: ChatViewModel) {
             modifier = Modifier.fillMaxWidth()
         ) {
             items(messages.size) { index ->
-                MessageView(messages[index])
+                MessageView(messages[index],loggedInUser)
 
 
             }
@@ -117,9 +122,7 @@ fun InputBar(onSendMessage: (String) -> Unit) {
             Spacer(modifier = Modifier.width(8.dp))
             Button(
                 onClick = {
-
-
-                   onSendMessage(text.value)
+                    onSendMessage(text.value)
                     text.value = ""
                 }
             ) {
@@ -130,23 +133,40 @@ fun InputBar(onSendMessage: (String) -> Unit) {
 }
 
 @Composable
-fun MessageView(message: Message) {
+fun MessageView(message: Message, loggedInUser: User?) {
+
+
+    val isCurrentUser = message.sender_name == loggedInUser?.name
+
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .fillMaxWidth() // Adjusted to fill max width instead of fillMaxSize for better control in LazyColumn
+            .fillMaxWidth()
+            .wrapContentWidth(
+                align = if (isCurrentUser) Alignment.End else Alignment.Start
+            )
+
     ) {
-        Text(
-            text = message.sender_name,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(bottom = 2.dp, start = 4.dp) // Added some padding below the sender name
-        )
+
+        if(!isCurrentUser) {
+
+
+            Text(
+                text = message.sender_name,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(
+                    bottom = 2.dp,
+                    start = 4.dp
+                )
+            )
+
+        }
 
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(MaterialTheme.colorScheme.inversePrimary) // Background now applied directly to Box
+                .background(MaterialTheme.colorScheme.inversePrimary)
                 .wrapContentWidth()
         ) {
             Text(
@@ -159,7 +179,7 @@ fun MessageView(message: Message) {
 
             Text(
                 text = formatMessageTime(message.timestamp.toLocalDateTime()),
-                style = MaterialTheme.typography.bodySmall,  // Use a smaller text style
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -167,24 +187,22 @@ fun MessageView(message: Message) {
             )
 
 
-
-
         }
-
-
 
 
     }
 }
 
 fun formatMessageTime(time: kotlinx.datetime.LocalDateTime): String {
-    val formatter = DateTimeFormatter.ofPattern("HH:mm")  // Format for hour and minute
+    //
+    val formatter = DateTimeFormatter.ofPattern("HH:mm")
+    val javaTime = java.time.LocalDateTime.of(
+        time.year, time.monthNumber, time.dayOfMonth,
+        time.hour, time.minute, time.second
+    )
 
-    return time.time.toString()
+    return formatter.format(javaTime)
 }
-
-
-
 
 @Serializable
 data class Message(

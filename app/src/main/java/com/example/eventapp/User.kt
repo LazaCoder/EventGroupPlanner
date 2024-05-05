@@ -22,11 +22,6 @@ interface UserService {
     suspend fun getAllUsers(): List<User>
 }
 
-
-
-
-
-
 interface AuthService {
     @POST("/auth/login")
     suspend fun login(@Body request: LoginRequest): retrofit2.Response<User>

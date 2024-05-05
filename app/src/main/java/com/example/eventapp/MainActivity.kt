@@ -1,6 +1,7 @@
 package com.example.eventapp
 
 import ChatScreen
+import InputBar
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -55,6 +56,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -76,6 +78,8 @@ class MainActivity : ComponentActivity() {
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+
 
         super.onCreate(savedInstanceState)
         setContent {
@@ -113,6 +117,7 @@ fun MainScreen() {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val navController = rememberNavController()
     val scope = rememberCoroutineScope()
+    val viewModel: ChatViewModel = viewModel()
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -139,25 +144,25 @@ fun MainScreen() {
                 }
             }
             composable("Home") {
-                ScaffoldWithBars(drawerState, scope, navController) { innerPadding ->
+                ScaffoldWithBars(drawerState, scope, navController,viewModel) { innerPadding ->
                     HomeScreen(innerPadding, navController)
                 }
             }
             composable("Profile") {
-                ScaffoldWithBars(drawerState, scope, navController) {
+                ScaffoldWithBars(drawerState, scope, navController,viewModel) {
                     ProfileScreen(navController)
                 }
             }
             composable("Creator") {
-                ScaffoldWithBars(drawerState, scope, navController) { innerPadding ->
+                ScaffoldWithBars(drawerState, scope, navController,viewModel) { innerPadding ->
                     CreatorScreen(innerPadding, navController)
                 }
             }
 
             composable("Chat"){
-                ScaffoldWithBars(drawerState,scope ,navController) {
+                ScaffoldWithBars(drawerState,scope ,navController,viewModel) {
 
-                    ChatScreen(it)
+                    ChatScreen(it,viewModel)
 
                 }
 
@@ -197,11 +202,46 @@ fun navigateAndCloseDrawer(destination: String, drawerState: DrawerState, scope:
 }
 
 @Composable
-fun ScaffoldWithBars(drawerState: DrawerState, scope: CoroutineScope, navController: NavController, content: @Composable (PaddingValues) -> Unit) {
+fun ScaffoldWithBars(
+    drawerState: DrawerState,
+    scope: CoroutineScope,
+    navController: NavController,
+    viewModel: ChatViewModel,
+    content: @Composable (PaddingValues) -> Unit
+) {
+
+
+
+
+
+    val context = LocalContext.current
     Scaffold(
         topBar = { TopBar(navController) { toggleDrawer(drawerState, scope) } },
         content = content,
-        bottomBar = { BottomBar(navController) },
+        bottomBar = {
+
+            if (navController.currentDestination?.route != "Chat") {
+                BottomBar(navController)
+            } else{
+
+                InputBar(onSendMessage = {
+
+                    viewModel.sendMessage(it, context = context)
+
+
+                })
+
+
+
+
+
+            }
+
+
+
+
+
+                    },
     )
 }
 

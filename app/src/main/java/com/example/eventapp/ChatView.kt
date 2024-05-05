@@ -1,31 +1,63 @@
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import java.time.LocalTime
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.eventapp.ChatViewModel
+
+import com.google.gson.annotations.SerializedName
+import kotlinx.coroutines.launch
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.Serializable
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun ChatScreen(paddingValues: PaddingValues) {
-    val exampleMessage = Message("Hello, I am Alice!", "Alice", LocalTime.now())
+fun ChatScreen(paddingValues: PaddingValues, viewModel: ChatViewModel) {
+    val messages by viewModel.messages.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
+    val listState = rememberLazyListState()
+    var textFieldState by remember { mutableStateOf(TextFieldValue()) }
 
+    Log.d("ChatScreen", "Recomposing with ${messages.size} messages")
+
+    val context = LocalContext.current
+
+    LaunchedEffect(messages.size) {
+        coroutineScope.launch {
+
+            if(messages.isNotEmpty()){
+            listState.animateScrollToItem(messages.size - 1) }
+        }
+    }
     Scaffold(
-        bottomBar = { InputBar() } // Bottom bar for user input
+        modifier = Modifier.padding(bottom = 70.dp),
+
+             // Bottom bar for user input
     ) { innerPadding ->
         LazyColumn(
+            state = listState,
             contentPadding = PaddingValues(
                 top = paddingValues.calculateTopPadding(),
                 bottom = innerPadding.calculateBottomPadding(), // Adjust bottom padding to avoid overlapping
@@ -34,25 +66,27 @@ fun ChatScreen(paddingValues: PaddingValues) {
             ),
             modifier = Modifier.fillMaxWidth()
         ) {
-            repeat(20) {
-                item {
-                    MessageView(exampleMessage)
-                }
+            items(messages.size) { index ->
+                MessageView(messages[index])
+
+
             }
+
+
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InputBar() {
+fun InputBar(onSendMessage: (String) -> Unit) {
     var text = remember { mutableStateOf("") }
 
     // Styling the input field
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 8.dp, end = 8.dp, bottom = 80.dp),
+            .padding(start = 0.dp, end = 0.dp, bottom = 0.dp),
         color = MaterialTheme.colorScheme.surfaceContainer,
         shape = MaterialTheme.shapes.medium,
         shadowElevation = 10.dp
@@ -76,15 +110,16 @@ fun InputBar() {
                 singleLine = false,
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Send),
                 keyboardActions = KeyboardActions(onSend = {
-                    // Implement sending logic here
-                    // For now, we just clear the field
+                    onSendMessage(text.value)
                     text.value = ""
                 })
             )
             Spacer(modifier = Modifier.width(8.dp))
             Button(
                 onClick = {
-                    // Implement sending logic here
+
+
+                   onSendMessage(text.value)
                     text.value = ""
                 }
             ) {
@@ -102,7 +137,7 @@ fun MessageView(message: Message) {
             .fillMaxWidth() // Adjusted to fill max width instead of fillMaxSize for better control in LazyColumn
     ) {
         Text(
-            text = message.sender,
+            text = message.sender_name,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(bottom = 2.dp, start = 4.dp) // Added some padding below the sender name
@@ -111,11 +146,11 @@ fun MessageView(message: Message) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(MaterialTheme.colorScheme.inversePrimary ) // Background now applied directly to Box
+                .background(MaterialTheme.colorScheme.inversePrimary) // Background now applied directly to Box
                 .wrapContentWidth()
         ) {
             Text(
-                text = message.message,
+                text = message.message_text,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier
@@ -123,12 +158,12 @@ fun MessageView(message: Message) {
             )
 
             Text(
-                text = formatMessageTime(message.time),
+                text = formatMessageTime(message.timestamp.toLocalDateTime()),
                 style = MaterialTheme.typography.bodySmall,  // Use a smaller text style
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(top = 40.dp,end = 12.dp, bottom = 4.dp)
+                    .padding(top = 40.dp, end = 12.dp, bottom = 4.dp)
             )
 
 
@@ -142,19 +177,36 @@ fun MessageView(message: Message) {
     }
 }
 
-fun formatMessageTime(time: LocalTime): String {
+fun formatMessageTime(time: kotlinx.datetime.LocalDateTime): String {
     val formatter = DateTimeFormatter.ofPattern("HH:mm")  // Format for hour and minute
-    return time.format(formatter)
+
+    return time.time.toString()
 }
 
+
+
+
+@Serializable
 data class Message(
-    val message: String,
-    val sender: String,
-    val time: LocalTime
+    @SerializedName("message_id")
+    val message_id: Long? = null,
+
+    @SerializedName("sender_id")
+    val sender_id: Long,
+
+    @SerializedName("message_text")
+    val message_text: String,
+
+    @SerializedName("timestamp")
+    val timestamp: String,
+
+    @SerializedName("sender_name")
+    val sender_name: String
 )
+
 
 @Preview(showBackground = true)
 @Composable
 fun ChatScreenPreview() {
-    ChatScreen(PaddingValues(16.dp))
+
 }
